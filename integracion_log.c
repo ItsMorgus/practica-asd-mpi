@@ -11,19 +11,19 @@
 
 int main(int argc, char** argv)
 {
-    float integral; // RESULTADO DE LA INTEGRAL
-    float a = -1.0; // EXTREMO IZQUIERDO
-    float b = 1.0; // EXTREMO DERECHO
-    int n = 1000; // NUMERO DE TRAPECIOS
-    float h; // LONGITUD DE LA BASE DEL TRAPECIO
-    float x;
+    double integral; // RESULTADO DE LA INTEGRAL
+    double a = 1.0; // EXTREMO IZQUIERDO
+    double b = 100000.0; // EXTREMO DERECHO
+    int n = 2*2*2*2*3*3*5*7*11*11*13; // NUMERO DE TRAPECIOS
+    double h; // LONGITUD DE LA BASE DEL TRAPECIO
+    double x;
     int i;
-    float f(float x); /* FUNCION QUE ESTAMOS INTEGRANDO */
+    double f(double x); /* FUNCION QUE ESTAMOS INTEGRANDO */
     // Anhadido para paralelizar
     int mi_id, nprocs;
     int n_local;
-    float a_local, b_local;
-    float integral_local;
+    double a_local, b_local;
+    double integral_local;
     MPI_Init(&argc, &argv);
     MPI_Comm_size(MPI_COMM_WORLD, &nprocs);
     MPI_Comm_rank(MPI_COMM_WORLD, &mi_id);
@@ -37,34 +37,33 @@ int main(int argc, char** argv)
     integral_local = (f(a_local) + f(b_local))/2.0 * h;
     x = a_local;
     for (i = 1; i < n_local; i++) {
-      x = a_local + ((float) i)*h;
+      x = a_local + ((double) i)*h;
       integral_local += f(x)*h;
     }
 
     if (mi_id == 0) {
       integral = integral_local;
       for (i = 1; i < nprocs; i++) {
-        MPI_Recv(&integral_local, 1, MPI_FLOAT, i, ENVIO_FINAL, MPI_COMM_WORLD,
+        MPI_Recv(&integral_local, 1, MPI_DOUBLE, i, ENVIO_FINAL, MPI_COMM_WORLD,
                  MPI_STATUS_IGNORE);
         integral += integral_local;
       }
       //      integral = integral*h;
     } else {
-      MPI_Send(&integral_local, 1, MPI_FLOAT, 0, ENVIO_FINAL, MPI_COMM_WORLD);
+      MPI_Send(&integral_local, 1, MPI_DOUBLE, 0, ENVIO_FINAL, MPI_COMM_WORLD);
     }
 
     if (mi_id == 0) {
       printf("ESTIMACION USANDO n=%d TRAPECIOS,\n", n);
       printf("DE LA INTEGRAL DESDE %f HASTA %f = %f\n", a, b, integral);
-      printf("\nESTIMACION DE PI: %f\n", 2 * integral);
     }
     MPI_Finalize();
 } /* MAIN */
 
 /* FUNCION QUE ESTAMOS INTEGRANDO */
-float f(float x) {
-    float return_val;
+double f(double x) {
+    double return_val;
     /* CALCULA f(x) Y DEVUELVE SU VALOR */
-    return_val = sqrt( 1 - x*x );
+    return_val = log(x);
     return return_val;
 } /* f */
