@@ -32,7 +32,9 @@ int main(int argc, char** argv)
     MPI_Comm_rank(MPI_COMM_WORLD, &mi_id);
 
     for (j = 0; j < REPETICIONES; j++) {
-      tiempos[j] = MPI_Wtime();
+      if (mi_id == 0){
+	tiempos[j] = MPI_Wtime();
+      }
       h = (b-a)/n;
 
       n_local = n / nprocs;
@@ -58,9 +60,8 @@ int main(int argc, char** argv)
 	MPI_Send(&integral_local, 1, MPI_DOUBLE, 0, ENVIO_FINAL, MPI_COMM_WORLD);
       }
 
-      tiempos[j] = MPI_Wtime() - tiempos[j];
-
       if (mi_id == 0) {
+	tiempos[j] = MPI_Wtime() - tiempos[j];
 	if (j == 0) {
 	  printf("Cada punto es una repeticion\n");
 	}
